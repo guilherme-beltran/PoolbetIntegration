@@ -6,17 +6,19 @@ namespace PoolbetIntegration.API.Features.UserAdmins;
 
 public class CacheUserAdminRepository : ICacheUserAdminRepository
 {
-    private readonly IUserAdminRepository _decorated;
+    private readonly IUserAdminRepository _decoratedUserAdmin;
+    private readonly ITransactionRepository _decoratedTransaction;
     private readonly IMemoryCache _cache;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CacheUserAdminRepository> _logger;
 
-    public CacheUserAdminRepository(IUserAdminRepository userAdminRepository, IMemoryCache cache, IUnitOfWork unitOfWork, ILogger<CacheUserAdminRepository> logger)
+    public CacheUserAdminRepository(IUserAdminRepository userAdminRepository, IMemoryCache cache, IUnitOfWork unitOfWork, ILogger<CacheUserAdminRepository> logger, ITransactionRepository decoratedTransaction)
     {
-        _decorated = userAdminRepository;
+        _decoratedUserAdmin = userAdminRepository;
         _cache = cache;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _decoratedTransaction = decoratedTransaction;
     }
 
     public async Task<IEnumerable<UserAdmin>> GetAllAsync(CancellationToken cancellationToken)
@@ -28,7 +30,7 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
             entry =>
             {
                 entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(240));
-                return _decorated.GetAllAsync(cancellationToken);
+                return _decoratedUserAdmin.GetAllAsync(cancellationToken);
             });
     }
 
@@ -41,7 +43,7 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
             entry =>
             {
                 entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(240));
-                return _decorated.GetByIdAsync(id);
+                return _decoratedUserAdmin.GetByIdAsync(id);
             });
     }
 
@@ -54,11 +56,11 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
             entry =>
             {
                 entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(240));
-                return _decorated.GetByUsernameAndEmailAsync(username, email, cancellationToken);
+                return _decoratedUserAdmin.GetByUsernameAndEmailAsync(username, email, cancellationToken);
             });
     }
 
-    public async Task<TransactionResponse> UpdateBalance(decimal value, int type, string username, string email, CancellationToken cancellationToken)
+    public async Task<TransactionResponse> UpdateBalance(decimal value, int type, string username, string email, string betuuiId, CancellationToken cancellationToken)
     {
         string key = $"user-{username}-{email}";
         var user = await _cache.GetOrCreateAsync(
@@ -66,7 +68,7 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
             entry =>
             {
                 entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(240));
-                return _decorated.GetByUsernameAndEmailAsync(username, email, cancellationToken);
+                return _decoratedUserAdmin.GetByUsernameAndEmailAsync(username, email, cancellationToken);
             });
 
         user!.Clear();
@@ -77,12 +79,41 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
             value = Math.Abs(value);
         }
 
+        if (type == 3)
+        {
+            try
+            {
+                var transaction = await _decoratedTransaction.GetByIdAsync(betuuiId);
+                transaction.UpdateStatus(status: 3);
+                var updated = await _decoratedTransaction.UpdateAsync(transaction);
+                if (!updated)
+                {
+                    _logger.LogInformation($"Failed transaction.");
+                    await _unitOfWork.Rollback();
+                    return new TransactionResponse(status: false, user.Credit, "The transaction could not be saved");
+                }
+
+                await _unitOfWork.Commit(cancellationToken);
+
+                return new TransactionResponse(status: true, user.Credit, $"Successful transaction.");
+            }
+            catch (Exception ex)
+        {
+            await _unitOfWork.Rollback();
+            throw new Exception($"{ex.Message}");
+        }
+        finally
+        {
+            _unitOfWork.Dispose();
+        }
+        }
+
         user!.VerifyValue(value, type);
         if (!user.IsValid)
         {
             _logger.LogInformation($"Failed transaction.");
             await _unitOfWork.Rollback();
-            return new TransactionResponse(status: false, user.Credit, Guid.Empty, "Amount is greater than current balance.");
+            return new TransactionResponse(status: false, user.Credit, "Amount is greater than current balance.");
         }
 
         _logger.LogInformation($"New credit: {user!.Credit}");
@@ -91,18 +122,21 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
         {
             _unitOfWork.BeginTransaction();
             _cache.Set(key, user);
-            var updated = await _decorated.UpdateBalance(user.Credit, username, email);
+            var updatedCreditUser = await _decoratedUserAdmin.UpdateBalance(user.Credit, username, email);
 
-            if (!updated)
+            if (!updatedCreditUser)
             {
                 _logger.LogInformation($"Failed transaction.");
                 await _unitOfWork.Rollback();
-                return new TransactionResponse(status: false, user.Credit, Guid.Empty, "Balance too low.");
+                return new TransactionResponse(status: false, user.Credit, "Balance too low.");
             }
+
+            var transaction = Transaction.Create(transactionId: Guid.NewGuid(), status: 1, value: value, betUuiId: betuuiId);
+            await _decoratedTransaction.Insert(transaction);
 
             _logger.LogInformation($"Successful transaction.");
             await _unitOfWork.Commit(cancellationToken);
-            return new TransactionResponse(status: true, user.Credit, Guid.NewGuid(), $"Successful transaction.");
+            return new TransactionResponse(status: true, user.Credit, $"Successful transaction.");
         }
         catch (Exception ex)
         {

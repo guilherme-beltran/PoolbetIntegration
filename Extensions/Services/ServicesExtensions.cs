@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PoolbetIntegration.API.Data;
 using PoolbetIntegration.API.Features.Contexts;
+using PoolbetIntegration.API.Features.Transactions;
 using PoolbetIntegration.API.Features.UnitOfWork;
 using PoolbetIntegration.API.Features.UserAdmins;
 using PoolbetIntegration.API.Services.Poolbet;
@@ -25,6 +26,7 @@ public static class ServicesExtensions
 
         services.AddScoped<IUserAdminRepository, UserAdminRepository>();
         services.AddScoped<ICacheUserAdminRepository, CacheUserAdminRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddCors(options =>

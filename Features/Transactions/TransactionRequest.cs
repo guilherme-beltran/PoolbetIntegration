@@ -8,4 +8,5 @@ public class TransactionRequest
     public DateTime? Date { get; set; }
     public int Type { get; set; }
     public string? BetId { get; set; }
+    public Guid TransactionId { get; set; }
 }

@@ -38,6 +38,7 @@ namespace PoolbetIntegration.API.Controllers
                                                           type: request.Type,
                                                           username: request.Username,
                                                           email: request.Email,
+                                                          betId: request.BetId,
                                                           cancellationToken: cancellationToken);
 
             if (response.Status == false)

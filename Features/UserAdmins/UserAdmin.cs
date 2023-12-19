@@ -45,28 +45,14 @@ public sealed class UserAdmin : Notifiable<Notification>
             Decrease(value);
             return;
         }
-        else if (value < Credit && type == 2 || type == 3)
+        else if (value < Credit && type == 2 || type == 4)
         {
             Increase(value);
             return;
         }
+        
     }
 
-    public void VerifyValue2(decimal value, int type)
-    {
-        if (value < 0)
-        {
-            Math.Abs(value);
-        }
-        else if (value > Credit && type == 1)
-        {
-            Decrease(value);
-        }
-        else if (value > Credit && type == 2 || type == 3)
-        {
-            Increase(value);
-        }
-    }
 
     public void Increase(decimal value)
     {
