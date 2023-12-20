@@ -35,6 +35,22 @@ public class UserAdminRepository : IUserAdminRepository
         return userAdmin;
     }
 
+    public async Task<UserAdmin?> GetBalanceAsync(string username, string email, CancellationToken cancellationToken)
+    {
+        var userAdmin = await _context
+                        .UserAdmins
+                        .Where(x => x.Username == username && x.Email == email)
+                        .Select(u => new UserAdmin
+                        {
+                            Credit = u.Credit,
+                            Username = u.Username,
+                            Email = u.Email
+                        })
+                        .FirstOrDefaultAsync(cancellationToken);
+
+        return userAdmin;
+    }
+
     public async Task<bool> UpdateBalance(decimal value, string username, string email)
     {
         var updated = await _context

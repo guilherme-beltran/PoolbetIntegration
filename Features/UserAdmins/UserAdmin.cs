@@ -63,4 +63,16 @@ public sealed class UserAdmin : Notifiable<Notification>
     {
         Credit -= value;
     }
+
+    public UserAdminDTO ToDTO()
+    {
+        return new UserAdminDTO
+        {
+            UserAdminId = UserAdminId,
+            Name = Name,
+            Email = Email,
+            Username = Username,
+            Credit = Credit,
+        };
+    }
 }

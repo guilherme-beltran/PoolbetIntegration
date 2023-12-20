@@ -60,6 +60,18 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
             });
     }
 
+    public async Task<UserAdmin> GetBalanceAsync(string username, string email, CancellationToken cancellationToken)
+    {
+        string key = $"user-{username}-{email}";
+        return await _cache.GetOrCreateAsync(
+            key: key,
+            entry =>
+            {
+                entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(240));
+                return _decoratedUserAdmin.GetBalanceAsync(username, email, cancellationToken);
+            });
+    }
+
     public async Task<TransactionResponse> UpdateBalance(decimal value, int type, string username, string email, string betuuiId, CancellationToken cancellationToken)
     {
         string key = $"user-{username}-{email}";
