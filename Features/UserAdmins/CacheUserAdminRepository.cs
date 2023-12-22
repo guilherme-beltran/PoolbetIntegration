@@ -83,6 +83,11 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
                 return _decoratedUserAdmin.GetByUsernameAndEmailAsync(username, email, cancellationToken);
             });
 
+        if (user is null)
+        {
+            return new TransactionResponse(status: false, credit: 0.00m, message: $"User with {username} not found.");
+        }
+
         user!.Clear();
         _logger.LogInformation($"Old credit: {user!.Credit}");
 
