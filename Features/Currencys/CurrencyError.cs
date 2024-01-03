@@ -5,7 +5,7 @@ namespace PoolbetIntegration.API.Features.Currencys;
 public class CurrencyError
 {
     [JsonProperty("code")]
-    public int Code;
+    public string Code;
 
     [JsonProperty("status")]
     public int Status;

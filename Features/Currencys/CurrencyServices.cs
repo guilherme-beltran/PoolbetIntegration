@@ -26,7 +26,7 @@ public class CurrencyServices : ICurrencyServices
                 var currencyError = JsonConvert.DeserializeObject<CurrencyError>(responseMessage);
                 return new CurrencyResponse 
                 { 
-                    Code = currencyError.Code,
+                    Code = currencyError!.Code,
                     Status = currencyError.Status,
                     Message = currencyError.Message
                 };

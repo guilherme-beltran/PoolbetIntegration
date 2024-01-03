@@ -27,6 +27,11 @@ public class CurrencyQuotes : ICurrencyQuotes
     public async Task<decimal> BrlToEur(decimal credit, CancellationToken cancellationToken)
     {
         var valueInBgn = await _services.Convert("BRL", "EUR", cancellationToken);
+        if (valueInBgn.Status == 404)
+        {
+            return 0;
+        }
+
         var bgnCredit = valueInBgn.Value * credit;
         return bgnCredit;
     }
@@ -34,6 +39,11 @@ public class CurrencyQuotes : ICurrencyQuotes
     public async Task<decimal> EurToBgn(decimal credit, CancellationToken cancellationToken)
     {
         var valueInBgn = await _services.Convert("EUR", "BGN", cancellationToken);
+        if (valueInBgn.Status == 404)
+        {
+            return 0;
+        }
+
         var bgnCredit = valueInBgn.Value * credit;
         return bgnCredit;
     }

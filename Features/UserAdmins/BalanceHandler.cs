@@ -35,6 +35,10 @@ public sealed class BalanceHandler : IBalanceHandler
         if (_currencyConverters.TryGetValue(request.Currency, out var converter))
         {
             convertedCredit = await converter(request.Currency, userAdmin.Credit, cancellationToken);
+            if (convertedCredit == 0)
+            {
+                return new BalanceResponse(status: false, credit: 0, error: "The service cannot convert the currency.", key: "convertedCredit");
+            }
         }
 
         return new BalanceResponse(status: true,

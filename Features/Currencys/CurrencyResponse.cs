@@ -11,7 +11,7 @@ public class CurrencyResponse
     public int? Status;
 
     [JsonProperty("code")]
-    public int? Code;
+    public string? Code;
 
     [JsonProperty("message")]
     public string? Message;

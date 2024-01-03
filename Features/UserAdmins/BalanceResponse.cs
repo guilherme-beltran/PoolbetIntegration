@@ -2,14 +2,21 @@
 
 public class BalanceResponse
 {
-    public BalanceResponse(bool status, decimal credit, string currency, string? error = null)
+    public BalanceResponse(bool status,
+                           decimal credit,
+                           string currency,
+                           string? error = null)
     {
         Status = status;
         Credit = credit;
         Currency = currency;
         Error = error;
     }
-    public BalanceResponse(bool status, decimal credit, string? error = null, string? key = null, string? currency = null)
+    public BalanceResponse(bool status,
+                           decimal credit,
+                           string? error = null,
+                           string? key = null,
+                           string? currency = null)
     {
         Status = status;
         Credit = credit;
