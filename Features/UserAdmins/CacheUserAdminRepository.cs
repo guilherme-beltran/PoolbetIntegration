@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using PoolbetIntegration.API.Features.Transactions;
 using PoolbetIntegration.API.Features.UnitOfWork;
+using System.Threading;
 
 namespace PoolbetIntegration.API.Features.UserAdmins;
 
@@ -63,6 +64,7 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
     public async Task<UserAdmin> GetBalanceAsync(string username, string email, CancellationToken cancellationToken)
     {
         string key = $"user-{username}-{email}";
+        //return await _decoratedUserAdmin.GetBalanceAsync(username, email, cancellationToken);
         return await _cache.GetOrCreateAsync(
             key: key,
             entry =>
@@ -164,5 +166,26 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
         {
             _unitOfWork.Dispose();
         }
+    }
+
+    public async Task<CheckUserResponse> IsUserCorrect(string username, string email, int id, CancellationToken cancellationToken)
+    {
+        string key = $"user-{username}-{email}";
+        var isCorrect = await _cache.GetOrCreateAsync(
+            key: key,
+            entry =>
+            {
+                entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(240));
+                return _decoratedUserAdmin.IsUserCorrect(username, email, id, cancellationToken);
+            });
+
+        if (isCorrect == false)
+        {
+            return new CheckUserResponse(status: false, error: $"User with email {email} and id {id} not found.");
+        }
+
+        return new CheckUserResponse(status: true);
+
+
     }
 }

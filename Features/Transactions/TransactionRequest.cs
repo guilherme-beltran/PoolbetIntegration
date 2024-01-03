@@ -9,4 +9,5 @@ public class TransactionRequest
     public int Type { get; set; }
     public string? BetId { get; set; }
     public Guid TransactionId { get; set; }
+    public string Currency { get; set; }
 }

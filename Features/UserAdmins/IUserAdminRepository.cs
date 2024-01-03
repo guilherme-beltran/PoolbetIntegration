@@ -7,4 +7,5 @@ public interface IUserAdminRepository
     Task<UserAdmin> GetByUsernameAndEmailAsync(string username, string email, CancellationToken cancellationToken);
     Task<UserAdmin> GetBalanceAsync(string username, string email, CancellationToken cancellationToken);
     Task<bool> UpdateBalance(decimal value, string username, string email);
+    Task<bool> IsUserCorrect(string username, string email, int id, CancellationToken cancellationToken);
 }

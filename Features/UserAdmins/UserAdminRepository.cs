@@ -62,4 +62,11 @@ public class UserAdminRepository : IUserAdminRepository
 
         return updated != 0;
     }
+
+    public async Task<bool> IsUserCorrect(string username, string email, int id, CancellationToken cancellationToken) 
+        => await _context
+                .UserAdmins
+                .AnyAsync(u => u.Email.Equals(email) &&
+                               u.UserAdminId.Equals(id),
+                               cancellationToken);
 }

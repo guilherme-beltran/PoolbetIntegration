@@ -24,21 +24,26 @@ namespace PoolbetIntegration.API.Controllers
         [HttpGet]
         [Route("/balance")]
         public async Task<ActionResult<BalanceResponse>> GetBalance([FromQuery] BalanceRequest request,
-                                                                    [FromServices] ICacheUserAdminRepository repository,
+                                                                    [FromServices] IBalanceHandler handler,
                                                                     CancellationToken cancellationToken)
         {
-            var userAdmin = await repository.GetBalanceAsync(username: request.Username, email: request.Email, cancellationToken: cancellationToken);
-            BalanceResponse response;
-            if (userAdmin is null)
+            var response = await handler.Handle(request, cancellationToken);
+            if (response.Status is false)
+                return BadRequest(response);
+
+            return Ok(response);
+
+        }
+
+        [HttpPost]
+        [Route("/check-user")]
+        public async Task<ActionResult<CheckUserResponse>> CheckUser([FromBody] CheckUserRequest request, [FromServices] ICacheUserAdminRepository repository, CancellationToken cancellationToken)
+        {
+            var response = await repository.IsUserCorrect(username: request.Login, email: request.Email, id: request.UserId, cancellationToken: cancellationToken);
+            if (response.Status is false)
             {
-                response = new BalanceResponse(status: false, credit: 0.00m, error: $"No users was found with username {request.Username} and email {request.Email}.", key: "LoginController.GetBalance");
                 return BadRequest(response);
             }
-
-            response = new BalanceResponse(status: true,
-                                           credit: userAdmin.Credit, 
-                                           error: "");
-
             return Ok(response);
         }
     }

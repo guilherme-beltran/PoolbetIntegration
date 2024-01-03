@@ -33,8 +33,8 @@ namespace PoolbetIntegration.API.Controllers
         [HttpPost]
         [Route("/set-transaction")]
         public async Task<ActionResult<TransactionResponse>> SetTransaction([FromBody] TransactionRequest request,
-                                                       [FromServices] ICacheUserAdminRepository repository,
-                                                       CancellationToken cancellationToken)
+                                                                            [FromServices] ICacheUserAdminRepository repository,
+                                                                            CancellationToken cancellationToken)
         {
             var response = await repository.UpdateBalance(value: request.Value,
                                                           type: request.Type,

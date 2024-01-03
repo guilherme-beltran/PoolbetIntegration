@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PoolbetIntegration.API.Data;
 using PoolbetIntegration.API.Features.Contexts;
+using PoolbetIntegration.API.Features.Currencys;
 using PoolbetIntegration.API.Features.Transactions;
 using PoolbetIntegration.API.Features.UnitOfWork;
 using PoolbetIntegration.API.Features.UserAdmins;
@@ -28,6 +29,9 @@ public static class ServicesExtensions
         services.AddScoped<ICacheUserAdminRepository, CacheUserAdminRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IBalanceHandler, BalanceHandler>();
+        services.AddScoped<ICurrencyServices, CurrencyServices>();
+        services.AddScoped<ICurrencyQuotes, CurrencyQuotes>();
 
         services.AddCors(options =>
         {
@@ -38,14 +42,19 @@ public static class ServicesExtensions
         });
 
 
-        services.AddClient();
+        services.AddClients();
     }
 
-    public static void AddClient(this IServiceCollection services)
+    public static void AddClients(this IServiceCollection services)
     {
         services.AddHttpClient("poolbet", (client) =>
         {
-            client.BaseAddress = new Uri("https://backend.poolbet365.com");
+            client.BaseAddress = new Uri("https://localhost:5001");
+        });
+
+        services.AddHttpClient("economia", (client) =>
+        {
+            client.BaseAddress = new Uri("https://economia.awesomeapi.com.br");
         });
     }
 }

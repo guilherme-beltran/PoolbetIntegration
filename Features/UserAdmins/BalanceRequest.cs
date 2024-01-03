@@ -4,4 +4,5 @@ public class BalanceRequest
 {
     public string Email { get; set; }
     public string Username { get; set; }
+    public string Currency { get; set; }
 }
