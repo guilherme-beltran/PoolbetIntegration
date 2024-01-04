@@ -2,7 +2,7 @@
 
 public interface ITransactionRepository
 {
-    Task<Transaction> GetByIdAsync(string betuuiId);
+    Task<Transaction> GetByBetIdAsync(string betuuiId);
     Task<bool> UpdateAsync(Transaction transaction);
     Task Insert(Transaction transaction);
 }

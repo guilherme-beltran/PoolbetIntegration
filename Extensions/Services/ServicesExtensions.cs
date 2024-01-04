@@ -11,6 +11,12 @@ namespace PoolbetIntegration.API.Extensions.Services;
 
 public static class ServicesExtensions
 {
+    public static void AddConfigurations(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddContext(configuration);
+        services.AddServices();
+        services.AddClients();
+    }
     public static void AddContext(this IServiceCollection services, IConfiguration configuration)
     {
         string connection = configuration.GetConnectionString("Database") ?? throw new Exception($"Ñenhuma conexão foi definida.");
@@ -27,7 +33,9 @@ public static class ServicesExtensions
 
         services.AddScoped<IUserAdminRepository, UserAdminRepository>();
         services.AddScoped<ICacheUserAdminRepository, CacheUserAdminRepository>();
+        services.AddScoped<ICacheTransactionRepository, CacheTransactionRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<ISetTransactionHandler, SetTransactionHandler>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IBalanceHandler, BalanceHandler>();
         services.AddScoped<ICurrencyServices, CurrencyServices>();
@@ -40,9 +48,6 @@ public static class ServicesExtensions
                                   .AllowAnyMethod()
                                   .AllowAnyHeader());
         });
-
-
-        services.AddClients();
     }
 
     public static void AddClients(this IServiceCollection services)

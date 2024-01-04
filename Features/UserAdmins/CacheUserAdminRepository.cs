@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using PoolbetIntegration.API.Features.Transactions;
 using PoolbetIntegration.API.Features.UnitOfWork;
-using System.Threading;
 
 namespace PoolbetIntegration.API.Features.UserAdmins;
 
@@ -74,7 +73,7 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
             });
     }
 
-    public async Task<TransactionResponse> UpdateBalance(decimal value, int type, string username, string email, string betuuiId, CancellationToken cancellationToken)
+    public async Task<TransactionResponse> UpdateBalance(decimal value, int type, string username, string email, string betuuiId, string currency, CancellationToken cancellationToken)
     {
         string key = $"user-{username}-{email}";
         var user = await _cache.GetOrCreateAsync(
@@ -102,7 +101,7 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
         {
             try
             {
-                var transaction = await _decoratedTransaction.GetByIdAsync(betuuiId);
+                var transaction = await _decoratedTransaction.GetByBetIdAsync(betuuiId);
                 transaction.UpdateStatus(status: 3);
                 var updated = await _decoratedTransaction.UpdateAsync(transaction);
                 if (!updated)
@@ -117,14 +116,14 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
                 return new TransactionResponse(status: true, user.Credit, $"Successful transaction.");
             }
             catch (Exception ex)
-        {
-            await _unitOfWork.Rollback();
-            throw new Exception($"{ex.Message}");
-        }
-        finally
-        {
-            _unitOfWork.Dispose();
-        }
+            {
+                await _unitOfWork.Rollback();
+                throw new Exception($"{ex.Message}");
+            }
+            finally
+            {
+                _unitOfWork.Dispose();
+            }
         }
 
         user!.VerifyValue(value, type);
@@ -188,4 +187,19 @@ public class CacheUserAdminRepository : ICacheUserAdminRepository
 
 
     }
+
+    public async Task<bool> UpdateBalance(UserAdmin userAdmin, CancellationToken cancellationToken)
+    {
+        string key = $"user-{userAdmin.Username}-{userAdmin.Email}";
+        var updated = await _decoratedUserAdmin.UpdateBalance(value: userAdmin.Credit, username: userAdmin.Username, email: userAdmin.Email);
+        if (updated is false)
+        {
+            return false;
+        }
+
+        _cache.Set(key, userAdmin);
+        return true;
+
+    }
+
 }

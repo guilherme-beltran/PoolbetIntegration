@@ -11,7 +11,7 @@ public class TransactionRepository : ITransactionRepository
     public TransactionRepository(AppDbContext context)
         => _context = context;
 
-    public async Task<Transaction?> GetByIdAsync(string betuuiId)
+    public async Task<Transaction?> GetByBetIdAsync(string betuuiId)
     {
         var transaction = await _context.Transactions.Where(t => t.BetUuiId == betuuiId).FirstOrDefaultAsync();
 

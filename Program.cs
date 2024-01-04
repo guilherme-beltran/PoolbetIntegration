@@ -2,8 +2,7 @@ using PoolbetIntegration.API.Extensions.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddContext(builder.Configuration);
-builder.Services.AddServices();
+builder.Services.AddConfigurations(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {
