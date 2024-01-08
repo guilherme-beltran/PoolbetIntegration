@@ -4,7 +4,8 @@ namespace PoolbetIntegration.API.Features.Login;
 
 public sealed class LoginRequest
 {
-    public string Login { get; set; } = "clubguilherme";
-    public string Password { get; set; } = "testeintegracao";
-    public int PartnerId { get; set; } = 2011;
+    public string Login { get; set; }
+    public string Password { get; set; }
+    public int PartnerId { get; set; }
+    public string Currency { get; set; }
 }
