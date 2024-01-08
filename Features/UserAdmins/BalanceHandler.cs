@@ -1,4 +1,4 @@
-﻿using PoolbetIntegration.API.Features.Currencys;
+using PoolbetIntegration.API.Features.Currencys;
 
 namespace PoolbetIntegration.API.Features.UserAdmins;
 
@@ -16,18 +16,23 @@ public sealed class BalanceHandler : IBalanceHandler
 
         _currencyConverters = new()
         {
-            { "EUR", _quotes.ToBRL },
-            { "BGN", _quotes.ConvertBRLToBGN },
+            { "EUR", (_, credit, __) => Task.FromResult(credit) },
+            { "BGN", (_, credit, __) => Task.FromResult(credit) },
             { "BRL", (_, credit, __) => Task.FromResult(credit) }
         };
     }
 
     public async Task<BalanceResponse> Handle(BalanceRequest request, CancellationToken cancellationToken)
     {
-        var userAdmin = await _repository.GetBalanceAsync(username: request.Username, email: request.Email, cancellationToken: cancellationToken);
+        var userAdmin = await _repository.GetBalanceAsync(username: request.Username, 
+            email: request.Email, 
+            cancellationToken: cancellationToken);
         if (userAdmin is null)
         {
-            return new BalanceResponse(status: false, credit: 0.00m, error: $"No users was found with username {request.Username} and email {request.Email}.", key: "LoginController.GetBalance");
+            return new BalanceResponse(status: false, 
+                credit: 0.00m, 
+                error: $"No users was found with username {request.Username} and email {request.Email}.", 
+                key: "LoginController.GetBalance");
         }
 
         decimal convertedCredit = new();
@@ -37,7 +42,10 @@ public sealed class BalanceHandler : IBalanceHandler
             convertedCredit = await converter(request.Currency, userAdmin.Credit, cancellationToken);
             if (convertedCredit == 0)
             {
-                return new BalanceResponse(status: false, credit: 0, error: "The service cannot convert the currency.", key: "convertedCredit");
+                return new BalanceResponse(status: false, 
+                    credit: 0, 
+                    error: "The service cannot convert the currency.", 
+                    key: "convertedCredit");
             }
         }
 
