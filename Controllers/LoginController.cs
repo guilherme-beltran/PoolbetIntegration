@@ -27,9 +27,6 @@ namespace PoolbetIntegration.API.Controllers
         {
             var response = await handler.Handle(request, cancellationToken);
             
-            if (response.Status is false && response.Key == "convertedCredit")
-                return StatusCode(500, response);
-            
             if (response.Status is false)
                 return BadRequest(response);
 

@@ -1,4 +1,5 @@
-﻿using PoolbetIntegration.API.Features.UnitOfWork;
+﻿using PoolbetIntegration.API.Features.Currencys;
+using PoolbetIntegration.API.Features.UnitOfWork;
 using PoolbetIntegration.API.Features.UserAdmins;
 
 namespace PoolbetIntegration.API.Features.Transactions;
@@ -9,16 +10,26 @@ public sealed class SetTransactionHandler : ISetTransactionHandler
     private readonly ICacheTransactionRepository _cacheTransactionRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<SetTransactionHandler> _logger;
+    private readonly ICurrencyQuotes _quotes;
+    private readonly Dictionary<string, Func<decimal, CancellationToken, Task<(decimal, CurrencyResponse)>>> _currencyConverters;
 
     public SetTransactionHandler(ICacheUserAdminRepository cacheUserRepository,
                                     ICacheTransactionRepository cacheTransactionRepository,
                                     ILogger<SetTransactionHandler> logger,
-                                    IUnitOfWork unitOfWork)
+                                    IUnitOfWork unitOfWork,
+                                    ICurrencyQuotes quotes)
     {
         _cacheUserRepository = cacheUserRepository;
         _cacheTransactionRepository = cacheTransactionRepository;
         _logger = logger;
         _unitOfWork = unitOfWork;
+        _quotes = quotes;
+
+        _currencyConverters = new()
+        {
+            { "EUR", _quotes.EurToBrl },
+            { "BGN", _quotes.ConvertBgnToBrl }
+        };
     }
 
     public async Task<TransactionResponse> Handle(TransactionRequest request, CancellationToken cancellationToken)
@@ -63,6 +74,18 @@ public sealed class SetTransactionHandler : ISetTransactionHandler
             {
                 _unitOfWork.Dispose();
             }
+        }
+
+        (decimal, CurrencyResponse) convertedCredit = new();
+        if (_currencyConverters.TryGetValue(request.Currency.ToUpper(), out var converter))
+        {
+            convertedCredit = await converter(request.Value, cancellationToken);
+            if (convertedCredit.Item2 is not null)
+            {
+                return new TransactionResponse(status: false, credit: 0.0m, convertedCredit.Item2.Message!);
+            }
+
+            request.Value = Math.Round(convertedCredit.Item1, 2);
         }
 
         user!.VerifyValue(request.Value, request.Type);
