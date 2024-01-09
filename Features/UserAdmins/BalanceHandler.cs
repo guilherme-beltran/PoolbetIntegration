@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using PoolbetIntegration.API.Features.Currencys;
 
 namespace PoolbetIntegration.API.Features.UserAdmins;

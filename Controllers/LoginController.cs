@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using PoolbetIntegration.API.Features.Login;
 using PoolbetIntegration.API.Features.UserAdmins;
 using PoolbetIntegration.API.Services.Poolbet;
